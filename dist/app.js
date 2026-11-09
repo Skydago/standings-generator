@@ -1427,4 +1427,57 @@ document.addEventListener('DOMContentLoaded', async () => {
   const restored = loadState();
   if (!restored) seedExample();
   render();
+
+  checkForAppUpdate();
 });
+
+/* ===== Auto-update (Tauri updater plugin) =====
+   Only active inside the Tauri app (window.__TAURI__ is injected because
+   app.withGlobalTauri = true). In a plain browser this is a no-op. */
+async function checkForAppUpdate() {
+  const tauri = window.__TAURI__;
+  if (!tauri || !tauri.updater) return;
+
+  let update;
+  try {
+    update = await tauri.updater.check();
+  } catch (e) {
+    console.warn('Controllo aggiornamenti fallito:', e);
+    return;
+  }
+  if (!update) return;
+
+  const bar = $('#update-banner');
+  const text = $('#update-text');
+  const installBtn = $('#update-install');
+  text.textContent = `Nuova versione ${update.version} disponibile (attuale ${update.currentVersion}).`;
+  bar.classList.remove('hidden');
+
+  $('#update-dismiss').onclick = () => bar.classList.add('hidden');
+  installBtn.onclick = async () => {
+    installBtn.disabled = true;
+    $('#update-dismiss').disabled = true;
+    saveState();
+    let total = 0;
+    let done = 0;
+    try {
+      await update.downloadAndInstall(ev => {
+        if (ev.event === 'Started') total = ev.data.contentLength || 0;
+        else if (ev.event === 'Progress') {
+          done += ev.data.chunkLength;
+          text.textContent = total
+            ? `Download aggiornamento... ${Math.round(done / total * 100)}%`
+            : 'Download aggiornamento...';
+        } else if (ev.event === 'Finished') {
+          text.textContent = 'Installazione in corso...';
+        }
+      });
+      if (tauri.process) await tauri.process.relaunch();
+    } catch (e) {
+      console.error(e);
+      text.textContent = 'Aggiornamento non riuscito: ' + (e.message || e);
+      installBtn.disabled = false;
+      $('#update-dismiss').disabled = false;
+    }
+  };
+}
