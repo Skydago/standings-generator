@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VGC Standings Generator</title>
 <link rel="preconnect" href="https://raw.githubusercontent.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700&display=swap">
 <link rel="stylesheet" href="styles.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
@@ -12,8 +15,11 @@
 <div class="app">
   <aside class="sidebar">
     <header class="sidebar-header">
-      <h1>VGC Standings</h1>
-      <p>Generatore classifiche torneo</p>
+      <div class="brand-mark" aria-hidden="true">VGC</div>
+      <div>
+        <h1>VGC <span>Standings</span></h1>
+        <p>Generatore classifiche torneo</p>
+      </div>
     </header>
 
     <section class="form-section">
@@ -70,7 +76,10 @@
   <main class="preview-wrap">
     <div id="standings-card" class="standings-card">
       <header class="card-header">
-        <h2 id="card-title">My VGC Tournament</h2>
+        <div class="card-title-wrap">
+          <span id="card-kicker" class="card-kicker"></span>
+          <h2 id="card-title">My VGC Tournament</h2>
+        </div>
         <p id="card-subtitle">Final Standings</p>
       </header>
       <div id="standings-rows" class="standings-rows"></div>

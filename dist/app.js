@@ -367,9 +367,16 @@ function sortedPlayers() {
   });
 }
 
+const CARD_KICKERS = {
+  challenge: 'League Challenge',
+  cup: 'League Cup',
+  friendly: 'Friendly',
+};
+
 function renderCard() {
   $('#card-title').textContent = state.tournament.name || ' ';
   $('#card-subtitle').textContent = state.tournament.subtitle || '';
+  $('#card-kicker').textContent = CARD_KICKERS[state.tournament.type] || '';
 
   const rows = $('#standings-rows');
   let sorted = sortedPlayers();
@@ -390,7 +397,7 @@ function renderCard() {
     const place = i + 1;
     const row = document.createElement('div');
     row.className = 'standings-row'
-      + (place <= 2 ? ' top-' + place : '')
+      + (place <= 3 ? ' top-' + place : '')
       + (showCP ? ' with-cp' : '');
 
     const teamHtml = p.team.map(slot => {
