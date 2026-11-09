@@ -1,0 +1,16 @@
+{
+  "identifier": "desktop-capability",
+  "description": "updater and relaunch for the main window",
+  "platforms": [
+    "macOS",
+    "windows",
+    "linux"
+  ],
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "updater:default",
+    "process:allow-restart"
+  ]
+}
