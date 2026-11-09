@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VGC Standings Generator</title>
+<link rel="preconnect" href="https://raw.githubusercontent.com">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body data-tournament-type="custom">
+<div class="app">
+  <aside class="sidebar">
+    <header class="sidebar-header">
+      <h1>VGC Standings</h1>
+      <p>Generatore classifiche torneo</p>
+    </header>
+
+    <section class="form-section">
+      <h2>Torneo</h2>
+      <label>Nome
+        <input id="tournament-name" type="text" value="My VGC Tournament">
+      </label>
+      <label>Sottotitolo
+        <input id="tournament-subtitle" type="text" value="Final Standings">
+      </label>
+      <label>Tipo torneo
+        <select id="tournament-type">
+          <option value="custom">Custom (CP manuale)</option>
+          <option value="friendly">Friendly (nessun CP)</option>
+          <option value="challenge">League Challenge</option>
+          <option value="cup">League Cup</option>
+        </select>
+      </label>
+      <label id="total-players-wrap" class="hidden">Partecipanti totali
+        <input id="total-players" type="number" min="0" placeholder="auto (= n. giocatori)">
+      </label>
+      <label id="top-only-wrap" class="checkbox-label hidden">
+        <input id="top-only" type="checkbox" checked>
+        <span>Mostra solo top con CP <span id="top-only-hint"></span></span>
+      </label>
+    </section>
+
+    <section class="form-section">
+      <div class="section-head">
+        <h2>Giocatori</h2>
+        <button id="add-player" class="btn-primary">+ Aggiungi</button>
+      </div>
+      <div id="players-list"></div>
+    </section>
+
+    <section class="form-section actions">
+      <button id="export-png" class="btn-primary big">Esporta PNG</button>
+      <button id="export-json" class="btn-secondary">Salva JSON</button>
+      <label class="btn-secondary file-label">
+        Carica JSON
+        <input id="import-json" type="file" accept="application/json" hidden>
+      </label>
+      <label class="btn-secondary file-label">
+        Importa TDF (da TOM)
+        <input id="import-tdf" type="file" accept=".tdf,.xml,text/xml,application/xml" hidden>
+      </label>
+    </section>
+
+    <footer class="sidebar-footer">
+      <span id="status">Caricamento Pokédex...</span>
+    </footer>
+  </aside>
+
+  <main class="preview-wrap">
+    <div id="standings-card" class="standings-card">
+      <header class="card-header">
+        <h2 id="card-title">My VGC Tournament</h2>
+        <p id="card-subtitle">Final Standings</p>
+      </header>
+      <div id="standings-rows" class="standings-rows"></div>
+      <footer class="card-footer">
+        <span>VGC Standings Generator</span>
+      </footer>
+    </div>
+  </main>
+</div>
+
+<template id="player-form-tpl">
+  <div class="player-form" data-id="">
+    <div class="player-form-head">
+      <span class="place">#1</span>
+      <button class="remove" title="Rimuovi" type="button">&times;</button>
+    </div>
+    <label>Nome
+      <input class="p-name" type="text" placeholder="Player name">
+    </label>
+    <label>Paese (ISO 2)
+      <input class="p-country" type="text" maxlength="2" placeholder="IT">
+    </label>
+    <div class="record-grid">
+      <label>Vittorie
+        <input class="p-wins" type="number" min="0" value="0">
+      </label>
+      <label>Sconfitte
+        <input class="p-losses" type="number" min="0" value="0">
+      </label>
+      <label class="p-cp-wrap">CP manuali
+        <input class="p-cp" type="number" min="0" value="0">
+      </label>
+    </div>
+    <div class="team-inputs">
+      <div class="team-head">
+        <span class="team-label">Team (6 Pokémon)</span>
+        <button class="btn-link import-team" type="button">Importa</button>
+      </div>
+      <div class="team-slots">
+        <div class="team-slot" data-slot="0">
+          <input class="p-mon" type="text" placeholder="Pokémon 1" data-slot="0" list="poke-list" autocomplete="off">
+          <input class="p-item" type="text" placeholder="oggetto" data-slot="0" list="item-list" autocomplete="off">
+        </div>
+        <div class="team-slot" data-slot="1">
+          <input class="p-mon" type="text" placeholder="Pokémon 2" data-slot="1" list="poke-list" autocomplete="off">
+          <input class="p-item" type="text" placeholder="oggetto" data-slot="1" list="item-list" autocomplete="off">
+        </div>
+        <div class="team-slot" data-slot="2">
+          <input class="p-mon" type="text" placeholder="Pokémon 3" data-slot="2" list="poke-list" autocomplete="off">
+          <input class="p-item" type="text" placeholder="oggetto" data-slot="2" list="item-list" autocomplete="off">
+        </div>
+        <div class="team-slot" data-slot="3">
+          <input class="p-mon" type="text" placeholder="Pokémon 4" data-slot="3" list="poke-list" autocomplete="off">
+          <input class="p-item" type="text" placeholder="oggetto" data-slot="3" list="item-list" autocomplete="off">
+        </div>
+        <div class="team-slot" data-slot="4">
+          <input class="p-mon" type="text" placeholder="Pokémon 5" data-slot="4" list="poke-list" autocomplete="off">
+          <input class="p-item" type="text" placeholder="oggetto" data-slot="4" list="item-list" autocomplete="off">
+        </div>
+        <div class="team-slot" data-slot="5">
+          <input class="p-mon" type="text" placeholder="Pokémon 6" data-slot="5" list="poke-list" autocomplete="off">
+          <input class="p-item" type="text" placeholder="oggetto" data-slot="5" list="item-list" autocomplete="off">
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<datalist id="poke-list"></datalist>
+<datalist id="item-list"></datalist>
+
+<div id="preview-modal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-backdrop" data-close="1"></div>
+  <div class="modal-dialog modal-dialog-wide">
+    <header class="modal-head">
+      <h3>Anteprima esportazione</h3>
+      <button class="modal-close" type="button" data-close="1" aria-label="Chiudi">&times;</button>
+    </header>
+    <div class="modal-body preview-body">
+      <div id="preview-status" class="preview-status">Generazione in corso...</div>
+      <img id="preview-image" class="preview-image hidden" alt="Anteprima classifica">
+    </div>
+    <footer class="modal-foot">
+      <button class="btn-secondary" type="button" data-close="1">Annulla</button>
+      <button class="btn-primary" id="preview-download" type="button" disabled>Scarica PNG</button>
+    </footer>
+  </div>
+</div>
+
+<div id="import-modal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-backdrop" data-close="1"></div>
+  <div class="modal-dialog">
+    <header class="modal-head">
+      <h3>Importa team</h3>
+      <button class="modal-close" type="button" data-close="1" aria-label="Chiudi">&times;</button>
+    </header>
+    <div class="modal-body">
+      <label>URL Pokepaste
+        <input id="import-url" type="text" placeholder="https://pokepast.es/abc123..." autocomplete="off">
+      </label>
+      <div class="modal-or"><span>oppure</span></div>
+      <label>Incolla formato Showdown
+        <textarea id="import-text" rows="12" placeholder="Garchomp @ Choice Scarf&#10;Ability: Rough Skin&#10;Tera Type: Ground&#10;EVs: 252 Atk / 4 SpD / 252 Spe&#10;Adamant Nature&#10;- Earthquake&#10;- Dragon Claw&#10;..."></textarea>
+      </label>
+      <p id="import-feedback" class="modal-feedback"></p>
+    </div>
+    <footer class="modal-foot">
+      <button class="btn-secondary" type="button" data-close="1">Annulla</button>
+      <button class="btn-primary" id="import-confirm" type="button">Importa</button>
+    </footer>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
